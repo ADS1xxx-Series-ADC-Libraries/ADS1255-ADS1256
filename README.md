@@ -205,7 +205,7 @@ This code uses Arduino SPI library and some direct port manipulation
 
 ## Credits
 
-### Aknowledgement 
+### Acknowledgement 
 
 
 * [adienakhmad](https://github.com/adienakhmad), original library
