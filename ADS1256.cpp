@@ -57,7 +57,6 @@ unsigned char ADS1256::readRegister(unsigned char reg) {
 
 void ADS1256::sendCommand(unsigned char reg) {
   CSON();
-  waitDRDY();
   SPI.transfer(reg);
   delayMicroseconds(1);              //  t11 delay (4*tCLKIN 4*0.13 = 0.52 us)    
   CSOFF();
@@ -205,6 +204,7 @@ void ADS1256::setChannel(byte AIN_P, byte AIN_N) {
   CSON();
   writeRegister(ADS1256_RADD_MUX, MUX_CHANNEL);
   sendCommand(ADS1256_CMD_SYNC);
+  delayMicroseconds(3);  // t11 for SYNC is longer (pg 6)
   sendCommand(ADS1256_CMD_WAKEUP);
   CSOFF();
 }
@@ -213,13 +213,9 @@ void ADS1256::setChannel(byte AIN_P, byte AIN_N) {
 Init chip with set datarate and gain and perform self calibration
 */ 
 void ADS1256::begin(unsigned char drate, unsigned char gain, bool buffenable) {
-  _pga = 1 << gain;
   sendCommand(ADS1256_CMD_SDATAC);  // send out ADS1256_CMD_SDATAC command to stop continous reading mode.
   writeRegister(ADS1256_RADD_DRATE, drate);  // write data rate register   
-  uint8_t bytemask = B00000111;
-  uint8_t adcon = readRegister(ADS1256_RADD_ADCON);
-  uint8_t byte2send = (adcon & ~bytemask) | gain;
-  writeRegister(ADS1256_RADD_ADCON, byte2send);
+  setGain(gain);
   if (buffenable) {  
     uint8_t status = readRegister(ADS1256_RADD_STATUS);   
     bitSet(status, 1); 
@@ -249,6 +245,17 @@ uint8_t ADS1256::getStatus() {
   return readRegister(ADS1256_RADD_STATUS); 
 }
 
+/*
+Set gain 0..7 in ADCON register
+*/ 
+void ADS1256::setGain(uint8_t gain) {
+  if( gain > 7 ) return;
+  uint8_t bytemask = B00000111;
+  uint8_t adcon = readRegister(ADS1256_RADD_ADCON);
+  uint8_t byte2send = (adcon & ~bytemask) | gain;
+  writeRegister(ADS1256_RADD_ADCON, byte2send);
+  _pga = 1 << gain;
+}
 
 
 void ADS1256::CSON() {
@@ -263,7 +270,8 @@ void ADS1256::CSOFF() {
 
 void ADS1256::waitDRDY() {
   //while (PIN_DRDY & (1 << PINDEX_DRDY));
-  while (digitalRead(pinDRDY));
+  while (digitalRead(pinDRDY))
+    yield();
 }
 
 boolean ADS1256::isDRDY() {
