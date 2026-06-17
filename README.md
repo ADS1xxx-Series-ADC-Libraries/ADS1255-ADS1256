@@ -83,6 +83,18 @@ Tested with arduino UNO and MEGA
 | * POWN    | 5V                |
 
 
+| ADS Board | Arduino MEGA Board |
+|-----------|-------------------|
+| * 5V      | 5V                |
+| * GND     | GND               |
+| * SCLK    | pin 52 (SCK)      |
+| * DIN     | pin 51 (MOSI)     |
+| * DOUT    | pin 50 (MISO)     |
+| * DRDY    | pin 49             |
+| * CS      | pin 53            |
+| * POWN    | 5V                |
+
+
 | ADS Board | NodeMCU v2        |
 |-----------|-------------------|
 | * 5V      | 5V  (vin)         |
